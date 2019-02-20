@@ -1,0 +1,54 @@
+=========================
+Super Simple File Indexer
+=========================
+
+Building
+========
+
+Makefile is present. Run the following
+
+     make
+
+Usage
+=====
+
+     ./ssfi -t number_of_threads path_to_search
+
+- number_of_threads must be an integer greater than 0. Floating point numbers
+  will be typecasted to integer and used, others will lead to an error.
+- path_to_search must be a valid directory with absolute path or relative
+  path from the location of the program. Anything else will lead to an error
+
+
+Design
+======
+
+1. Thread Management
+
+   Theads are managed using a thread pool. Files to be read are put into a
+   queue for the threads to consume them. Worker threads run forever
+   waiting for files to read. If they're idle waiting for a file to read
+   for a while, they exit. Threads need to acquire a lock to read from
+   the queue.
+
+2. Word count
+
+   Global word count was performed using a Trie data structure. Trie is
+   a sequence tree with every path in the tree from the root to the leaf
+   representing a word, passing through each character in the word as
+   tree nodes. Every leaf word node also stores the count of that word.
+   Every thread updates this count. Each node is protected by a mutex
+   which the threads have to acquire before updating the count.
+
+   When the threads all exit, the entire Trie is traversed and a list
+   of words and counts are obtained. Top 10 most occuring words are
+   retrieved from this list.
+
+Limits
+======
+
+The limits of the program is defined in this section along with their
+definition locations
+- Maximum number of filenames in task queue 1000 -> fileind.c MAX_TASKS
+- Maximum length of strings File paths and words 10000 -> pool.c/trie.c MAX
+- Wait time for threads to exit 4 -> pool.c MAX_WAIT_TIME_IN_SECONDS
